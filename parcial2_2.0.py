@@ -18,10 +18,11 @@ tab_default = {'id': [1, 2, 3, 4, 5],
 
 exten = '.csv'
 abrir = "Ingrese el archivo que desea abrir: "
+mens_caja = "Generando gráfico de caja y bigotes..."
+type_dat = 'float', 'int'
+selec_arch = "Seleccione un archivo (ingrese un número): "
 
-
-
-class Database:
+class DatAnalis:
     """
     la clase genera una base de datos con datos por defecto 
     si no se le pasan argumentos,  si se le pasan rutas lee los archivos csv 
@@ -29,7 +30,14 @@ class Database:
     sí archivos, lee los archivos csv que se le hayan pasado como argumentos.
     """
     def __init__(self,*archivos,**rutas):
-        
+        """
+        Argumentos:
+            *archivos -- uno o varios nombres de archivo (cadenas de 
+             caracteres) a cargar.
+            **rutas -- uno o varios pares clave-valor donde la clave es un 
+              identificador de ruta (cadena de caracteres)
+              y el valor es la ruta (cadena de caracteres) que se debe buscar. 
+        """
         if archivos == () and rutas =={}:
             data = tab_default
             print(pd.DataFrame(data))
@@ -50,6 +58,18 @@ class Database:
                 print(df)
         
     def calculate_time(func):
+        """
+        Función decoradora que calcula el tiempo de ejecución de la función que
+        recibe como argumento.
+
+        Argumentos:
+            func -- la función a la que se le calculará el tiempo de ejecución.
+
+        Retorno:
+            Retorna una función que envuelve a la función original y calcula su
+            tiempo de ejecución. Imprime en consola el tiempo de ejecución y 
+            retorna el resultado de la función original.
+        """
         def wrapper(*args, **kwargs):
             start_time = time.time()
             result = func(*args, **kwargs)
@@ -91,21 +111,23 @@ class Database:
         
     def mensaje(func):
         def wrapper(*args, **kwargs):
-            print("Generando gráfico de caja y bigotes...")
+            print(mens_caja)
             return func(*args, **kwargs)
         return wrapper
     
     @mensaje
     def grafico_caja(self,archivo_csv):
         """
-        Crea un gráfico de caja y bigotes (boxplot) para cada una de las variables numéricas especificadas.
+        Crea un gráfico de caja y bigotes (boxplot) para cada una de las 
+        variables numéricas especificadas.
 
         Parámetros:
-        - vars_num: una lista de los nombres de las variables numéricas a graficar.
+        - vars_num: una lista de los nombres de las variables numéricas a 
+                    graficar.
         """
         # Seleccionar las variables numéricas del archivo CSV
         df = pd.read_csv(archivo_csv)
-        vars_numericas = df.select_dtypes(include=['float', 'int']).columns.tolist()
+        vars_numericas = df.select_dtypes(include=[type_dat]).columns.tolist()
 
         # Crear el gráfico de caja y bigotes
         plt.figure(figsize=(8, 6))
@@ -143,20 +165,27 @@ class Database:
         folder_path = os.getcwd()
 
         # Obtener una lista de los archivos CSV en la carpeta
-        csv_files = [f for f in os.listdir(folder_path) if f.endswith('.csv')]
+        files = [f for f in os.listdir(folder_path) if f.endswith('.csv')
+                     or f.endswith('.xlsx')]
 
         # Mostrar al usuario la lista de archivos CSV y pedirle que seleccione uno
-        print("Archivos CSV disponibles:")
-        for i, file in enumerate(csv_files):
+        print("Archivos CSV y XLSX disponibles:")
+        for i, file in enumerate(files):
             print(f"{i+1}. {file}")
-        selected_file_index = int(input("Seleccione un archivo (ingrese un número): ")) - 1
+        selected_file_index = int(input(selec_arch)) - 1
 
         # Cargar el archivo CSV seleccionado en un DataFrame de pandas
-        selected_file_path = os.path.join(folder_path, csv_files[selected_file_index])
-        df = pd.read_csv(selected_file_path)
-
+        selected_file_path = os.path.join(folder_path, files[selected_file_index])
+        
+        if selected_file_path.endswith(exten):
+            
+            df = pd.read_csv(selected_file_path)
+        else:
+            df = pd.read_excel(selected_file_path)
+            print(df)
         # Seleccionar las columnas numéricas y calcular la matriz de correlación
-        numeric_columns = [col for col in df.columns if pd.api.types.is_numeric_dtype(df[col])]
+        numeric_columns = [col for col in df.columns if 
+                           pd.api.types.is_numeric_dtype(df[col])]
         corr_matrix = df[numeric_columns].corr(method='pearson')
 
         # Mostrar la matriz de correlación
@@ -173,27 +202,37 @@ class Database:
         folder_path = os.getcwd()
 
         # Obtener una lista de los archivos CSV en la carpeta
-        csv_files = [f for f in os.listdir(folder_path) if f.endswith('.csv')]
+        csv_files = [f for f in os.listdir(folder_path) if f.endswith('.csv')
+                     or f.endswith('.xlsx')]
 
         # Mostrar al usuario la lista de archivos CSV y pedirle que seleccione uno
         print("Archivos CSV disponibles:")
         for i, file in enumerate(csv_files):
             print(f"{i+1}. {file}")
-        selected_file_index = int(input("Seleccione un archivo (ingrese un número): ")) - 1
+        selected_file_index = int(input(selec_arch)) - 1
 
         # Cargar el archivo CSV seleccionado en un DataFrame de pandas
-        selected_file_path = os.path.join(folder_path, csv_files[selected_file_index])
+        selected_file_path = os.path.join(folder_path, csv_files
+                                          [selected_file_index])
+        
         df = pd.read_csv(selected_file_path)
 
-        # Mostrar al usuario las columnas numéricas disponibles y pedirle que seleccione dos
-        numeric_columns = [col for col in df.columns if pd.api.types.is_numeric_dtype(df[col])]
+        # Mostrar al usuario las columnas numéricas disponibles y pedirle que 
+        #seleccione dos
+        numeric_columns = [col for col in df.columns 
+                           if pd.api.types.is_numeric_dtype(df[col])]
         print("Columnas numéricas disponibles:")
         for i, col in enumerate(numeric_columns):
             print(f"{i+1}. {col}")
-        selected_column_indexes = [int(input(f"Seleccione la columna numérica {j+1} (ingrese un número): ")) - 1 for j in range(2)]
+        selected_column_indexes = [int(input(f"Seleccione la columna numérica\
+                                             {j+1} (ingrese un número): "))
+                                             - 1 for j in range(2)]
 
-        # Seleccionar las dos columnas numéricas elegidas y ajustar un modelo de regresión lineal
-        selected_column_names = [numeric_columns[index] for index in selected_column_indexes]
+        # Seleccionar las dos columnas numéricas elegidas y ajustar un modelo
+        #de regresión lineal
+        
+        selected_column_names = [numeric_columns[index] for index 
+                                 in selected_column_indexes]
         x = df[selected_column_names[0]].values.reshape((-1,1))
         y = df[selected_column_names[1]]
         regression_model = linear_model.LinearRegression().fit(x, y)
@@ -214,7 +253,8 @@ class Database:
         plt.xlabel(selected_column_names[0])
         plt.ylabel(selected_column_names[1])
         plt.show()
-        print(" coeficiente de correlación de Pearson = ",regression_model.score(x,y))
+        print(" coeficiente de correlación de Pearson = ",
+              regression_model.score(x,y))
 
 def analizar_graficar_funcion(func,a,b):
     """
@@ -257,7 +297,9 @@ def analizar_graficar_funcion(func,a,b):
     plt.subplot(2, 2, 3)
     plt.plot(x, y, label='Área bajo la curva')
     plt.plot(x, integral, label='Antiderivada')
-    plt.fill_between(x, y, alpha=0.3)  # Rellenar el área bajo la curva de la función
+    
+    # Rellenar el área bajo la curva de la función
+    plt.fill_between(x, y, alpha=0.3)  
     plt.legend()
     #plt.xlabel('x')
     #plt.ylabel('y')
@@ -271,13 +313,20 @@ def analizar_graficar_funcion(func,a,b):
     plt.plot(x, derivada, color="deeppink", label="Derivada")
     plt.legend(loc = "best")
     plt.grid(True)
-    plt.title('Derivada')
+    # plt.title('Derivada')
 
     # Mostrar las gráficas
     #plt.tight_layout()
     plt.show()
     
-x = Database()
+# Ejemplo de uso
+funcion = lambda x: x**2  # Definición de la función
+a = -10  # Límite inferior de integración
+b = 10 # Límite superior de integración
+
+analizar_graficar_funcion(funcion,a,b)    
+    
+# x = DatAnalis()
 
 # x.grafico_caja('Heart_disease_cleveland_new.csv')
 
