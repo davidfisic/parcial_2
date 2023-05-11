@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from sklearn import linear_model
 import time
 import numpy as np
+import sympy as sp
 
 tab_default = {'id': [1, 2, 3, 4, 5],
         'nombre': ['Juan', 'Pedro', 'María', 'Luisa', 'Ana'],
@@ -56,7 +57,7 @@ class DatAnalis:
                 file_path = os.path.join(value,arch)
                 df = pd.read_csv(file_path)
                 print(df)
-        
+                
     def calculate_time(func):
         """
         Función decoradora que calcula el tiempo de ejecución de la función que
@@ -127,7 +128,7 @@ class DatAnalis:
         """
         # Seleccionar las variables numéricas del archivo CSV
         df = pd.read_csv(archivo_csv)
-        vars_numericas = df.select_dtypes(include=[type_dat]).columns.tolist()
+        vars_numericas = df.select_dtypes(include=['float', 'int']).columns.tolist()
 
         # Crear el gráfico de caja y bigotes
         plt.figure(figsize=(8, 6))
@@ -274,7 +275,7 @@ def analizar_graficar_funcion(func,a,b):
     la función original y su derivada.
     """
     # Crear un rango de valores x para evaluar la función
-    x = np.linspace(a, b, 10000)
+    x = np.linspace(a, b, 100)
 
     # Evaluar la función en el rango de valores x
     y = func(x)
@@ -283,10 +284,12 @@ def analizar_graficar_funcion(func,a,b):
     integral = np.zeros_like(x)
     for i in range(len(x)):
         integral[i] = np.trapz(y[:i+1], x[:i+1])
-
+    
     # Calcular la derivada de la función
     derivada = np.gradient(y, x)
-
+    
+    
+    
     # Graficar la función original
     plt.subplot(2, 1, 1)
     plt.plot(x, y)
@@ -319,24 +322,43 @@ def analizar_graficar_funcion(func,a,b):
     #plt.tight_layout()
     plt.show()
     
-# Ejemplo de uso
-funcion = lambda x: x**2  # Definición de la función
+    
+
+    
+
+
+# seb = DatAnalis(Heart_disease_cleveland_new="C:/Users\sebas\OneDrive\Escritorio\Programación\parciales\Parcial_2")
+
+# cam = DatAnalis("Heart_disease_cleveland_new.csv")
+
+# dai = DatAnalis()
+
+# dai.new_table()
+
+# dai.grafico_caja("Heart_disease_cleveland_new.csv")
+
+# Así se usa la función de derivadas e integrales
+funcion = lambda x: x**3 + 2*x # Definición de la 
+
+# Definir la variable simbólica
+x = sp.symbols('x')
+
+# Definir la expresión matemática
+expr = x**3 + 2*x
+
+# Calcular la derivada
+derivada = sp.diff(expr, x)
+
+# Calcular la integral
+integral = sp.integrate(expr, x)
+
+# Imprimir los resultados
+print("Derivada:", derivada)
+print("Integral:", integral)
+
+
+
 a = -10  # Límite inferior de integración
 b = 10 # Límite superior de integración
 
 analizar_graficar_funcion(funcion,a,b)    
-    
-# x = DatAnalis()
-
-# x.grafico_caja('Heart_disease_cleveland_new.csv')
-
-# x.correlation()
-
-# x.regresion()
-
-# cwd = os.getcwd()
-# print("El directorio de trabajo actual es:", cwd)
-
-# cwd = cwd.replace("\\", "/")
-# print("Ruta modificada:", cwd)
-
